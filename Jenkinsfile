@@ -21,7 +21,7 @@ pipeline{
                 }
             }
         }
-        stage ('Quality Gate'){
+        stage('Quality Gate'){
             steps{
                 sleep(5)
                 timeout(time:1, unit: 'MINUTES'){
@@ -29,12 +29,12 @@ pipeline{
                 }
             }
         }
-        stage ('Deploy Backend'){
+        stage('Deploy Backend'){
             steps{
                  deploy adapters: [tomcat8(credentialsId: 'TomcatLogin', path: '', url: 'http://localhost:8001/')], contextPath: 'tasks-backend', war: 'target/tasks-backend.war'
             }
         }
-        stage ('API Tests'){
+        stage('API Tests'){
             steps{
                 dir('api-test'){
                     git credentialsId: 'github_login', url: 'https://github.com/jvtrtitu/tasks-api-test'
@@ -42,7 +42,7 @@ pipeline{
                 }
             }
         }
-        stage ('Deploy Frontend'){
+        stage('Deploy Frontend'){
             steps{
                 dir('frontend'){
                     git credentialsId: 'github_login', url: 'https://github.com/jvtrtitu/tasks-frontend'
@@ -51,7 +51,7 @@ pipeline{
                 }
             }
         }
-        stage ('Functional Test'){
+        stage('Functional Test'){
             steps{
                 dir('functional-test'){
                     git credentialsId: 'github_login', url: 'https://github.com/jvtrtitu/tasks-functional-test'
@@ -63,6 +63,14 @@ pipeline{
             steps{
                 bat 'docker-compose build'
                 bat 'docker-compose up -d'
+            }
+        }
+        stage('Health Check'){
+            steps{
+                sleep(15)
+                dir('functional-test'){
+                    bat 'mvn verify -Dskip.surefire.tests'
+                }
             }
         }
     }
